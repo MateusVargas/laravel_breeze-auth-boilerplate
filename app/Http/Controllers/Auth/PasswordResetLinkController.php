@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use App\Models\User;
 
 class PasswordResetLinkController extends Controller
 {
@@ -31,6 +32,15 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'email' => 'required|email',
         ]);
+
+        $is_social_user = User::where('email',$request->only('email'))
+                    ->whereNotNull('social_account_id')
+                    ->first();
+
+        if ($is_social_user) {
+            return back()->withInput($request->only('email'))
+                  ->withErrors(['email' => "We can't find a user with that email address."]);
+        }
 
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
